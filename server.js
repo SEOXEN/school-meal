@@ -1,53 +1,46 @@
 /**
  * 동마중 급식 투표 서버
- * 실행: node server.js
- * 의존성: npm install express better-sqlite3 cors
+ * DB 없이 JSON 파일로 투표 저장 → Node.js 어느 버전이든 호환
+ * 의존성: npm install express cors
  */
 
-const express    = require('express');
-const Database   = require('better-sqlite3');
-const cors       = require('cors');
-const path       = require('path');
+const express = require('express');
+const cors    = require('cors');
+const fs      = require('fs');
+const path    = require('path');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-/* ── DB 초기화 ── */
-const db = new Database(path.join(__dirname, 'votes.db'));
+/* ── 데이터 파일 경로 ── */
+const DATA_FILE = path.join(__dirname, 'votes.json');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS votes (
-    date     TEXT    NOT NULL,
-    type     TEXT    NOT NULL CHECK(type IN ('like','dislike')),
-    voter_id TEXT    NOT NULL,
-    voted_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-    PRIMARY KEY (date, voter_id)
-  );
-`);
+/* ── JSON 읽기/쓰기 헬퍼 ── */
+function readData() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    }
+  } catch (e) {}
+  /* { [date]: { likes: 0, dislikes: 0, voters: { [voter_id]: 'like'|'dislike' } } } */
+  return {};
+}
+
+function writeData(data) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
 
 /* ── 미들웨어 ── */
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); /* index.html 서빙 */
+app.use(express.static(path.join(__dirname, 'public')));
 
 /* ── 투표 집계 조회 ── */
 app.get('/api/votes/:date', (req, res) => {
   const { date } = req.params;
-
-  const rows = db.prepare(`
-    SELECT type, COUNT(*) as cnt
-    FROM votes
-    WHERE date = ?
-    GROUP BY type
-  `).all(date);
-
-  const result = { likes: 0, dislikes: 0 };
-  rows.forEach(r => {
-    if (r.type === 'like')    result.likes    = r.cnt;
-    if (r.type === 'dislike') result.dislikes = r.cnt;
-  });
-
-  res.json(result);
+  const data = readData();
+  const entry = data[date] || { likes: 0, dislikes: 0 };
+  res.json({ likes: entry.likes || 0, dislikes: entry.dislikes || 0 });
 });
 
 /* ── 내 투표 확인 ── */
@@ -57,58 +50,53 @@ app.get('/api/votes/:date/my', (req, res) => {
 
   if (!voter_id) return res.json({ vote: null });
 
-  const row = db.prepare(`
-    SELECT type FROM votes WHERE date = ? AND voter_id = ?
-  `).get(date, voter_id);
+  const data   = readData();
+  const entry  = data[date];
+  const myVote = entry?.voters?.[voter_id] || null;
 
-  res.json({ vote: row ? row.type : null });
+  res.json({ vote: myVote });
 });
 
-/* ── 투표 등록 / 취소 ── */
+/* ── 투표 등록 ── */
 app.post('/api/votes/:date', (req, res) => {
-  const { date }          = req.params;
-  const { voter_id, type } = req.body;   /* type: 'like' | 'dislike' | null(취소) */
+  const { date }           = req.params;
+  const { voter_id, type } = req.body;
 
-  if (!voter_id) {
-    return res.status(400).json({ error: 'voter_id required' });
+  if (!voter_id) return res.status(400).json({ error: 'voter_id required' });
+  if (!/^\d{8}$/.test(date)) return res.status(400).json({ error: 'invalid date' });
+
+  const data = readData();
+
+  /* 해당 날짜 데이터 초기화 */
+  if (!data[date]) {
+    data[date] = { likes: 0, dislikes: 0, voters: {} };
   }
 
-  /* 날짜 형식 검증 (YYYYMMDD) */
-  if (!/^\d{8}$/.test(date)) {
-    return res.status(400).json({ error: 'invalid date' });
+  const entry   = data[date];
+  const prevType = entry.voters[voter_id] || null;
+
+  /* 이미 투표한 경우 차단 (서버 이중 방어) */
+  if (prevType) {
+    return res.status(400).json({ error: 'already voted', vote: prevType });
   }
 
-  if (type === null || type === undefined) {
-    /* 투표 취소 */
-    db.prepare(`DELETE FROM votes WHERE date = ? AND voter_id = ?`).run(date, voter_id);
-    return res.json({ ok: true, action: 'removed' });
+  /* 투표 취소 요청 */
+  if (!type) {
+    return res.json({ ok: true, action: 'none', likes: entry.likes, dislikes: entry.dislikes });
   }
 
   if (type !== 'like' && type !== 'dislike') {
     return res.status(400).json({ error: 'type must be like or dislike' });
   }
 
-  /* 이미 투표한 경우 → 변경 허용 (같은 기기에서 like→dislike 변경)
-     단, 프론트에서 한 번 투표 후 버튼 잠금하므로 실제로는 1회만 가능 */
-  db.prepare(`
-    INSERT INTO votes (date, type, voter_id)
-    VALUES (?, ?, ?)
-    ON CONFLICT(date, voter_id) DO UPDATE SET type = excluded.type,
-                                               voted_at = strftime('%s','now')
-  `).run(date, type, voter_id);
+  /* 투표 반영 */
+  entry.voters[voter_id] = type;
+  if (type === 'like')    entry.likes    += 1;
+  if (type === 'dislike') entry.dislikes += 1;
 
-  /* 최신 집계 반환 */
-  const rows = db.prepare(`
-    SELECT type, COUNT(*) as cnt FROM votes WHERE date = ? GROUP BY type
-  `).all(date);
+  writeData(data);
 
-  const result = { likes: 0, dislikes: 0 };
-  rows.forEach(r => {
-    if (r.type === 'like')    result.likes    = r.cnt;
-    if (r.type === 'dislike') result.dislikes = r.cnt;
-  });
-
-  res.json({ ok: true, action: 'saved', ...result });
+  res.json({ ok: true, action: 'saved', likes: entry.likes, dislikes: entry.dislikes });
 });
 
 /* ── 서버 시작 ── */
