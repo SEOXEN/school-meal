@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>동마중 급식</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #1D9E75;
+      --green-light: #E1F5EE;
+      --green-dark: #0F6E56;
+      --red: #E24B4A;
+      --red-light: #FCEBEB;
+      --red-dark: #A32D2D;
+      --bg: #F4F6F3;
+      --surface: #FFFFFF;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --border: rgba(0,0,0,0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-inner {
+      max-width: 560px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .header .date-badge {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+
+    /* ── Main ── */
+    .main {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 24px 16px 0;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 28px 0 12px;
+    }
+
+    .section-label:first-child { margin-top: 0; }
+
+    /* ── Meal card ── */
+    .meal-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin-bottom: 10px;
+    }
+
+    .meal-card.today {
+      border: 2px solid var(--green);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card-date {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .today-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--green-light);
+      color: var(--green-dark);
+      padding: 3px 9px;
+      border-radius: 99px;
+    }
+
+    /* ── Menu chips ── */
+    .menu-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .menu-chip {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 7px 13px;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* ── Vote section ── */
+    .vote-section {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .vote-question {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .vote-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .vote-btn {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      font-family: inherit;
+    }
+
+    .vote-btn .btn-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .vote-btn:not(:disabled):hover { transform: scale(1.02); border-color: rgba(0,0,0,0.15); }
+    .vote-btn:not(:disabled):active { transform: scale(0.97); }
+
+    .vote-btn.active-like {
+      background: var(--green-light);
+      border-color: var(--green);
+    }
+    .vote-btn.active-like .btn-label { color: var(--green-dark); }
+
+    .vote-btn.active-dislike {
+      background: var(--red-light);
+      border-color: var(--red);
+    }
+    .vote-btn.active-dislike .btn-label { color: var(--red-dark); }
+
+    .vote-btn:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    /* voted label */
+    .voted-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    /* ── Vote stats ── */
+    .vote-stats {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+
+    .stats-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .stats-total {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .stats-total strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .bar-wrap {
+      height: 8px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 99px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 8px;
+    }
+
+    .bar-like {
+      background: var(--green);
+      height: 100%;
+      border-radius: 99px 0 0 99px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .bar-dislike {
+      background: var(--red);
+      height: 100%;
+      border-radius: 0 99px 99px 0;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .stats-nums {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .like-stat {
+      font-size: 12px;
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
+    .dislike-stat {
+      font-size: 12px;
+      color: var(--red-dark);
+      font-weight: 700;
+      text-align: right;
+    }
+
+    /* ── Empty / error ── */
+    .empty-msg {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-msg .icon {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .empty-msg p {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ── Loading skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+      height: 14px;
+      margin-bottom: 8px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo-dot"></div>
+    <h1>동마중학교 급식</h1>
+    <span class="date-badge" id="todayLabel"></span>
+  </div>
+</header>
+
+<main class="main" id="container">
+  <!-- 로딩 스켈레톤 -->
+  <p class="section-label">현재 급식</p>
+  <div class="skeleton-card">
+    <div class="skeleton" style="width:40%;margin-bottom:16px;"></div>
+    <div class="skeleton" style="width:85%;"></div>
+    <div class="skeleton" style="width:70%;"></div>
+    <div class="skeleton" style="width:55%;"></div>
+  </div>
+</main>
+
+<script>
+  /* ── 날짜 계산 ── */
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm   = String(today.getMonth() + 1).padStart(2, '0');
+  const dd   = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}${mm}${dd}`;
+  const day = today.getDay();
+
+  /* 헤더 날짜 */
+  document.getElementById('todayLabel').textContent =
+    `${today.getMonth()+1}월 ${today.getDate()}일 (${['일','월','화','수','목','금','토'][day]})`;
+
+  const container = document.getElementById('container');
+
+  /* ── 조작 방지: localStorage로 기기별 투표 저장 ── */
+  const VOTE_KEY_PREFIX = 'dmj_vote_';
+
+  function getUserVote(dateStr) {
+    try { return localStorage.getItem(VOTE_KEY_PREFIX + dateStr); } catch(e) { return null; }
+  }
+
+  function setUserVote(dateStr, type) {
+    try {
+      if (type) localStorage.setItem(VOTE_KEY_PREFIX + dateStr, type);
+      else localStorage.removeItem(VOTE_KEY_PREFIX + dateStr);
+    } catch(e) {}
+  }
+
+  /* ── 공유 투표 데이터: NEIS API가 CORS 허용하므로 그냥 fetch로 처리
+     실제 공유 저장은 서버가 없으면 불가 → 여기서는 localStorage 기반으로
+     같은 기기 재투표 조작 방지만 구현.
+     서버 연동이 필요하다면 아래 saveVote/loadVotes를 백엔드 API로 교체하세요. ── */
+
+  /* 투표 데이터 (페이지 메모리 + localStorage) */
+  let votes = {};   /* { [dateStr]: { likes, dislikes } } */
+
+  function loadVotesFromStorage(dateStr) {
+    try {
+      const raw = localStorage.getItem('dmj_votes_' + dateStr);
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return { likes: 0, dislikes: 0 };
+  }
+
+  function saveVotesToStorage(dateStr, v) {
+    try { localStorage.setItem('dmj_votes_' + dateStr, JSON.stringify(v)); } catch(e) {}
+  }
+
+  function castVote(dateStr, newType) {
+    const prev = getUserVote(dateStr);
+    const v = votes[dateStr] || { likes: 0, dislikes: 0 };
+
+    /* 이전 투표 취소 */
+    if (prev === 'like')    v.likes    = Math.max(0, v.likes - 1);
+    if (prev === 'dislike') v.dislikes = Math.max(0, v.dislikes - 1);
+
+    /* 새 투표 적용 */
+    if (newType === 'like')    v.likes    += 1;
+    if (newType === 'dislike') v.dislikes += 1;
+
+    votes[dateStr] = v;
+    saveVotesToStorage(dateStr, v);
+    setUserVote(dateStr, newType);
+    return v;
+  }
+
+  /* ── 통계 렌더 ── */
+  function renderStats(el, v) {
+    const total = v.likes + v.dislikes;
+    const lp = total === 0 ? 0 : Math.round(v.likes / total * 100);
+    const dp = total === 0 ? 0 : 100 - lp;
+
+    el.innerHTML = `
+      <div class="stats-top">
+        <span class="stats-total">
+          <strong>${total}명</strong>이 평가했어요
+        </span>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-like"    style="width:${lp}%"></div>
+        <div class="bar-dislike" style="width:${dp}%"></div>
+      </div>
+      <div class="stats-nums">
+        <span class="like-stat">👍 맛있다 &nbsp;${lp}% &nbsp;(${v.likes}명)</span>
+        <span class="dislike-stat">(${v.dislikes}명) ${dp}%&nbsp; 별로다 👎</span>
+      </div>
+    `;
+  }
+
+  /* ── 카드 렌더 ── */
+  function buildCard(item, index) {
+    const date = item.MLSV_YMD;
+    const isToday = date === todayStr;
+    const fDate = `${date.slice(4,6)}월 ${date.slice(6,8)}일`;
+
+    /* 메뉴 파싱 */
+    const menus = item.DDISH_NM.split('<br/>').map(m =>
+      m.replace(/\([^)]*\)/g,'').replace(/[+★♡.]/g,'').trim()
+    ).filter(Boolean);
+
+    /* 메모리에 투표 로드 */
+    votes[date] = loadVotesFromStorage(date);
+
+    /* 카드 엘리먼트 */
+    const card = document.createElement('div');
+    card.className = 'meal-card' + (isToday ? ' today' : '');
+
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-date">${fDate}</span>
+        ${isToday ? '<span class="today-badge">오늘</span>' : ''}
+      </div>
+      <div class="menu-grid">
+        ${menus.map(m => `<span class="menu-chip">${m}</span>`).join('')}
+      </div>
+      ${isToday ? `
+        <div class="vote-section">
+          <p class="vote-question">오늘 급식은 어땠나요?</p>
+          <div class="vote-buttons">
+            <button class="vote-btn" id="like-btn">
+              👍 <span class="btn-label">맛있다</span>
+            </button>
+            <button class="vote-btn" id="dislike-btn">
+              👎 <span class="btn-label">별로다</span>
+            </button>
+          </div>
+          <div class="vote-stats" id="vote-stats"></div>
+        </div>
+      ` : ''}
+    `;
+
+    if (isToday) {
+      const likeBtn    = card.querySelector('#like-btn');
+      const dislikeBtn = card.querySelector('#dislike-btn');
+      const statsEl    = card.querySelector('#vote-stats');
+
+      /* 이미 투표한 경우 버튼 상태 복원 + 재투표 방지 */
+      const existingVote = getUserVote(date);
+
+      function applyVoteState(type) {
+        likeBtn.classList.remove('active-like');
+        dislikeBtn.classList.remove('active-dislike');
+        if (type === 'like')    likeBtn.classList.add('active-like');
+        if (type === 'dislike') dislikeBtn.classList.add('active-dislike');
+      }
+
+      function lockButtons() {
+        likeBtn.disabled    = true;
+        dislikeBtn.disabled = true;
+        /* 이미 투표했음 안내 */
+        const info = document.createElement('p');
+        info.className = 'voted-label';
+        info.textContent = '이미 평가하셨습니다 (기기당 1회)';
+        card.querySelector('.vote-buttons').after(info);
+      }
+
+      if (existingVote) {
+        applyVoteState(existingVote);
+        lockButtons();
+      }
+
+      /* 초기 통계 표시 */
+      renderStats(statsEl, votes[date]);
+
+      /* 투표 버튼 이벤트 (아직 투표 안 한 경우만) */
+      if (!existingVote) {
+        likeBtn.addEventListener('click', () => {
+          const newV = castVote(date, 'like');
+          applyVoteState('like');
+          renderStats(statsEl, newV);
+          lockButtons();
+        });
+
+        dislikeBtn.addEventListener('click', () => {
+          const newV = castVote(date, 'dislike');
+          applyVoteState('dislike');
+          renderStats(statsEl, newV);
+          lockButtons();
+        });
+      }
+    }
+
+    return card;
+  }
+
+  /* ── 메인 실행 ── */
+  if (day === 0 || day === 6) {
+    container.innerHTML = `
+      <div class="empty-msg">
+        <span class="icon">🍙</span>
+        <p>오늘은 주말이라 급식이 없어요.</p>
+      </div>
+    `;
+  } else {
+    const daysUntilFriday = 5 - day;
+    const friday = new Date(today);
+    friday.setDate(today.getDate() + daysUntilFriday);
+    const endStr =
+      `${friday.getFullYear()}`
+      + `${String(friday.getMonth()+1).padStart(2,'0')}`
+      + `${String(friday.getDate()).padStart(2,'0')}`;
+
+    const url =
+      `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json`
+      + `&ATPT_OFCDC_SC_CODE=B10`
+      + `&SD_SCHUL_CODE=7134129`
+      + `&MLSV_FROM_YMD=${todayStr}`
+      + `&MLSV_TO_YMD=${endStr}`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        const rows = data.mealServiceDietInfo[1].row;
+        container.innerHTML = '';
+
+        rows.forEach((item, i) => {
+          if (i === 0) {
+            const lbl = document.createElement('p');
+            lbl.className = 'section-label';
+            lbl.textContent = '📍 현재 급식';
+            container.appendChild(lbl);
+          } else if (i === 1) {
+            const lbl = document.createElement('p');
+            lbl.className = 'section-label';
+            lbl.textContent = '📅 이번 주 급식';
+            container.appendChild(lbl);
+          }
+          container.appendChild(buildCard(item, i));
+        });
+      })
+      .catch(() => {
+        container.innerHTML = `
+          <div class="empty-msg">
+            <span class="icon">⚠️</span>
+            <p>급식 정보를 불러올 수 없습니다.</p>
+          </div>
+        `;
+      });
+  }
+</script>
+
+<div style="position:fixed;bottom:16px;right:20px;font-family:'Noto Sans KR',sans-serif;font-size:12px;font-weight:500;color:rgba(0,0,0,0.35);letter-spacing:-0.01em;pointer-events:none;user-select:none;">
+  Made By 이서준
+</div>
+
+</body>
+</html>
