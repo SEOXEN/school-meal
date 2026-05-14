@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>동마중 급식</title>
+  <title>동마중 급식 & 일정</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -16,6 +16,9 @@
       --red: #E24B4A;
       --red-light: #FCEBEB;
       --red-dark: #A32D2D;
+      --blue: #3B82F6;
+      --blue-light: #EFF6FF;
+      --blue-dark: #1E40AF;
       --bg: #F4F6F3;
       --surface: #FFFFFF;
       --text: #1a1a1a;
@@ -75,6 +78,61 @@
     }
     .section-label:first-child { margin-top: 0; }
 
+    /* 학사일정 카드 스타일 */
+    .schedule-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .schedule-card.today-event {
+      border-left: 4px solid var(--blue);
+      background: linear-gradient(to right, var(--blue-light), var(--surface));
+    }
+    .schedule-date {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 45px;
+    }
+    .schedule-date .month { font-size: 10px; color: var(--text-muted); font-weight: 700; }
+    .schedule-date .day { font-size: 18px; color: var(--text); font-weight: 700; line-height: 1.2; }
+    
+    .schedule-info { flex: 1; }
+    .schedule-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    
+    .schedule-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+    }
+    .schedule-type { 
+        font-size: 10px; 
+        padding: 2px 6px;
+        background: var(--bg);
+        color: var(--text-muted);
+        border-radius: 4px;
+        font-weight: 700;
+    }
+    .d-day-badge {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--blue);
+        background: var(--blue-light);
+        padding: 2px 8px;
+        border-radius: 99px;
+    }
+    .today-event .d-day-badge {
+        background: var(--blue);
+        color: white;
+    }
+
+    /* 기존 급식 카드 스타일 유지 */
     .meal-card {
       background: var(--surface);
       border-radius: var(--radius);
@@ -126,13 +184,7 @@
     .vote-btn.active-dislike .btn-label { color: var(--red-dark); }
     .vote-btn:disabled { cursor: default; opacity: 0.5; }
 
-    .voted-label {
-      font-size: 11px; color: var(--text-muted);
-      text-align: center; margin-bottom: 10px; font-weight: 500;
-    }
-
     .vote-stats { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; }
-
     .stats-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
     .stats-total { font-size: 13px; color: var(--text-muted); font-weight: 500; }
     .stats-total strong { color: var(--text); font-weight: 700; }
@@ -148,9 +200,9 @@
     .like-stat    { font-size: 12px; color: var(--green-dark); font-weight: 700; }
     .dislike-stat { font-size: 12px; color: var(--red-dark);   font-weight: 700; text-align: right; }
 
-    .empty-msg { text-align: center; padding: 64px 24px; color: var(--text-muted); }
-    .empty-msg .icon { font-size: 40px; display: block; margin-bottom: 12px; }
-    .empty-msg p { font-size: 16px; font-weight: 500; }
+    .empty-msg { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+    .empty-msg .icon { font-size: 32px; display: block; margin-bottom: 8px; }
+    .empty-msg p { font-size: 14px; font-weight: 500; }
 
     .skeleton {
       background: linear-gradient(90deg,#e8e8e8 25%,#f5f5f5 50%,#e8e8e8 75%);
@@ -169,18 +221,29 @@
 <header class="header">
   <div class="header-inner">
     <div class="logo-dot"></div>
-    <h1>동마중학교 급식</h1>
+    <h1>동마중학교 급식 & 일정</h1>
     <span class="date-badge" id="todayLabel"></span>
   </div>
 </header>
 
-<main class="main" id="container">
-  <p class="section-label">현재 급식</p>
-  <div class="skeleton-card">
-    <div class="skeleton" style="width:40%;margin-bottom:16px;"></div>
-    <div class="skeleton" style="width:85%;"></div>
-    <div class="skeleton" style="width:70%;"></div>
-    <div class="skeleton" style="width:55%;"></div>
+<main class="main">
+  <!-- 급식 섹션 -->
+  <div id="meal-container">
+    <p class="section-label">📍 급식 정보</p>
+    <div class="skeleton-card">
+      <div class="skeleton" style="width:40%;margin-bottom:16px;"></div>
+      <div class="skeleton" style="width:85%;"></div>
+      <div class="skeleton" style="width:70%;"></div>
+    </div>
+  </div>
+
+  <!-- 학사일정 섹션 -->
+  <div id="schedule-container" style="margin-top: 32px;">
+    <p class="section-label">📅 주요 학사일정</p>
+    <div class="skeleton-card">
+      <div class="skeleton" style="width:30%;margin-bottom:12px;"></div>
+      <div class="skeleton" style="width:60%;"></div>
+    </div>
   </div>
 </main>
 
@@ -189,20 +252,24 @@
 </div>
 
 <script>
-  /* ── 날짜 ── */
-  const today    = new Date();
-  const yyyy     = today.getFullYear();
-  const mm       = String(today.getMonth() + 1).padStart(2, '0');
-  const dd       = String(today.getDate()).padStart(2, '0');
+  /* ── 기본 정보 및 날짜 설정 ── */
+  const ATPT_CODE = "B10"; // 서울특별시교육청
+  const SCHUL_CODE = "7134129"; // 동마중학교
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
   const todayStr = `${yyyy}${mm}${dd}`;
-  const day      = today.getDay();
+  const dayIndex = today.getDay();
 
   document.getElementById('todayLabel').textContent =
-    `${today.getMonth()+1}월 ${today.getDate()}일 (${['일','월','화','수','목','금','토'][day]})`;
+    `${today.getMonth()+1}월 ${today.getDate()}일 (${['일','월','화','수','목','금','토'][dayIndex]})`;
 
-  const container = document.getElementById('container');
+  const mealContainer = document.getElementById('meal-container');
+  const scheduleContainer = document.getElementById('schedule-container');
 
-  /* ── voter_id: 기기 고유 ID ── */
+  /* ── 투표 관련 로직 (생략/유지) ── */
   function getVoterId() {
     let id = localStorage.getItem('dmj_voter_id');
     if (!id) {
@@ -213,73 +280,55 @@
   }
   const VOTER_ID = getVoterId();
 
-  /* ── API 호출 (같은 서버 → 상대경로) ── */
   async function fetchVotes(date) {
-    const res = await fetch(`/api/votes/${date}`);
-    return res.json();
+    try {
+      const res = await fetch(`/api/votes/${date}`);
+      return res.ok ? res.json() : { likes: 0, dislikes: 0 };
+    } catch(e) { return { likes: 0, dislikes: 0 }; }
   }
 
   async function fetchMyVote(date) {
-    const res  = await fetch(`/api/votes/${date}/my?voter_id=${encodeURIComponent(VOTER_ID)}`);
-    const data = await res.json();
-    return data.vote;
+    try {
+      const res = await fetch(`/api/votes/${date}/my?voter_id=${encodeURIComponent(VOTER_ID)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.vote;
+    } catch(e) { return null; }
   }
 
   async function postVote(date, type) {
     const res = await fetch(`/api/votes/${date}`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ voter_id: VOTER_ID, type })
+      body: JSON.stringify({ voter_id: VOTER_ID, type })
     });
     return res.json();
   }
 
-  /* ── 통계 렌더 ── */
   function renderStats(el, v) {
     const total = v.likes + v.dislikes;
-    const lp    = total === 0 ? 0 : Math.round(v.likes / total * 100);
-    const dp    = total === 0 ? 0 : 100 - lp;
-
+    const lp = total === 0 ? 0 : Math.round(v.likes / total * 100);
+    const dp = total === 0 ? 0 : 100 - lp;
     el.innerHTML = `
       <div class="stats-top">
         <span class="stats-total"><strong>${total}명</strong>이 평가했어요</span>
       </div>
       <div class="bar-wrap">
-        <div class="bar-like"    style="width:${lp}%"></div>
+        <div class="bar-like" style="width:${lp}%"></div>
         <div class="bar-dislike" style="width:${dp}%"></div>
       </div>
       <div class="stats-nums">
-        <span class="like-stat">👍 맛있다 &nbsp;${lp}% &nbsp;(${v.likes}명)</span>
-        <span class="dislike-stat">(${v.dislikes}명) ${dp}%&nbsp; 별로다 👎</span>
+        <span class="like-stat">👍 맛있다 ${lp}% (${v.likes})</span>
+        <span class="dislike-stat">(${v.dislikes}) ${dp}% 별로다 👎</span>
       </div>
     `;
   }
 
-  /* ── 버튼 잠금 ── */
-  function lockButtons(card) {
-    card.querySelector('#like-btn').disabled    = true;
-    card.querySelector('#dislike-btn').disabled = true;
-    if (!card.querySelector('.voted-label')) {
-      const info = document.createElement('p');
-      info.className   = 'voted-label';
-      info.textContent = '이미 평가하셨습니다 (기기당 1회)';
-      card.querySelector('.vote-buttons').after(info);
-    }
-  }
-
-  /* ── 버튼 상태 ── */
-  function applyVoteState(card, type) {
-    card.querySelector('#like-btn').classList.remove('active-like');
-    card.querySelector('#dislike-btn').classList.remove('active-dislike');
-    if (type === 'like')    card.querySelector('#like-btn').classList.add('active-like');
-    if (type === 'dislike') card.querySelector('#dislike-btn').classList.add('active-dislike');
-  }
-
-  /* ── 카드 생성 ── */
-  async function buildCard(item) {
-    const date    = item.MLSV_YMD;
+  /* ── 급식 카드 생성 ── */
+  async function buildMealCard(item) {
+    const date = item.MLSV_YMD;
     const isToday = date === todayStr;
-    const fDate   = `${date.slice(4,6)}월 ${date.slice(6,8)}일`;
+    const fDate = `${date.slice(4,6)}월 ${date.slice(6,8)}일`;
 
     const menus = item.DDISH_NM.split('<br/>').map(m =>
       m.replace(/\([^)]*\)/g,'').replace(/[+★♡.]/g,'').trim()
@@ -287,7 +336,6 @@
 
     const card = document.createElement('div');
     card.className = 'meal-card' + (isToday ? ' today' : '');
-
     card.innerHTML = `
       <div class="card-header">
         <span class="card-date">${fDate}</span>
@@ -303,101 +351,135 @@
             <button class="vote-btn" id="like-btn">👍 <span class="btn-label">맛있다</span></button>
             <button class="vote-btn" id="dislike-btn">👎 <span class="btn-label">별로다</span></button>
           </div>
-          <div class="vote-stats" id="vote-stats"><p style="font-size:13px;color:var(--text-muted);">불러오는 중...</p></div>
+          <div class="vote-stats" id="vote-stats"><p style="font-size:12px;color:var(--text-muted);">통계 불러오는 중...</p></div>
         </div>
       ` : ''}
     `;
 
     if (isToday) {
-      const statsEl    = card.querySelector('#vote-stats');
-      const likeBtn    = card.querySelector('#like-btn');
+      const statsEl = card.querySelector('#vote-stats');
+      const likeBtn = card.querySelector('#like-btn');
       const dislikeBtn = card.querySelector('#dislike-btn');
 
-      /* 서버에서 집계 + 내 투표 동시 조회 */
-      const [votes, myVote] = await Promise.all([
-        fetchVotes(date),
-        fetchMyVote(date)
-      ]);
-
+      const [votes, myVote] = await Promise.all([fetchVotes(date), fetchMyVote(date)]);
       renderStats(statsEl, votes);
 
       if (myVote) {
-        applyVoteState(card, myVote);
-        lockButtons(card);
+        if (myVote === 'like') likeBtn.classList.add('active-like');
+        else dislikeBtn.classList.add('active-dislike');
+        likeBtn.disabled = dislikeBtn.disabled = true;
       } else {
-        likeBtn.addEventListener('click', async () => {
+        const handleVote = async (type) => {
           likeBtn.disabled = dislikeBtn.disabled = true;
-          const result = await postVote(date, 'like');
-          applyVoteState(card, 'like');
-          renderStats(statsEl, result);
-          lockButtons(card);
-        });
-
-        dislikeBtn.addEventListener('click', async () => {
-          likeBtn.disabled = dislikeBtn.disabled = true;
-          const result = await postVote(date, 'dislike');
-          applyVoteState(card, 'dislike');
-          renderStats(statsEl, result);
-          lockButtons(card);
-        });
+          const res = await postVote(date, type);
+          if (type === 'like') likeBtn.classList.add('active-like');
+          else dislikeBtn.classList.add('active-dislike');
+          renderStats(statsEl, res);
+        };
+        likeBtn.onclick = () => handleVote('like');
+        dislikeBtn.onclick = () => handleVote('dislike');
       }
     }
-
     return card;
   }
 
-  /* ── 메인 ── */
-  if (day === 0 || day === 6) {
-    container.innerHTML = `
-      <div class="empty-msg">
-        <span class="icon">🍙</span>
-        <p>오늘은 주말이라 급식이 없어요.</p>
-      </div>`;
-  } else {
+  function loadMeals() {
+    if (dayIndex === 0 || dayIndex === 6) {
+      mealContainer.innerHTML = `<p class="section-label">📍 급식 정보</p><div class="empty-msg"><span class="icon">🍙</span><p>오늘은 주말이라 급식이 없어요.</p></div>`;
+      return;
+    }
     const fri = new Date(today);
-    fri.setDate(today.getDate() + (5 - day));
-    const endStr =
-      `${fri.getFullYear()}`
-      + `${String(fri.getMonth()+1).padStart(2,'0')}`
-      + `${String(fri.getDate()).padStart(2,'0')}`;
+    fri.setDate(today.getDate() + (5 - dayIndex));
+    const endStr = `${fri.getFullYear()}${String(fri.getMonth()+1).padStart(2,'0')}${String(fri.getDate()).padStart(2,'0')}`;
+    const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHUL_CODE}&MLSV_FROM_YMD=${todayStr}&MLSV_TO_YMD=${endStr}`;
 
-    const url =
-      `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json`
-      + `&ATPT_OFCDC_SC_CODE=B10`
-      + `&SD_SCHUL_CODE=7134129`
-      + `&MLSV_FROM_YMD=${todayStr}`
-      + `&MLSV_TO_YMD=${endStr}`;
-
-    fetch(url)
-      .then(r => r.json())
-      .then(async data => {
-        const rows = data.mealServiceDietInfo[1].row;
-        container.innerHTML = '';
-
-        for (let i = 0; i < rows.length; i++) {
-          if (i === 0) {
-            const lbl = document.createElement('p');
-            lbl.className = 'section-label';
-            lbl.textContent = '📍 현재 급식';
-            container.appendChild(lbl);
-          } else if (i === 1) {
-            const lbl = document.createElement('p');
-            lbl.className = 'section-label';
-            lbl.textContent = '📅 이번 주 급식';
-            container.appendChild(lbl);
-          }
-          const card = await buildCard(rows[i]);
-          container.appendChild(card);
-        }
-      })
-      .catch(() => {
-        container.innerHTML = `
-          <div class="empty-msg">
-            <span class="icon">⚠️</span>
-            <p>급식 정보를 불러올 수 없습니다.</p>
-          </div>`;
-      });
+    fetch(url).then(r => r.json()).then(async data => {
+      if (!data.mealServiceDietInfo) throw new Error();
+      const rows = data.mealServiceDietInfo[1].row;
+      mealContainer.innerHTML = '';
+      for (let i = 0; i < rows.length; i++) {
+        const section = document.createElement('p');
+        section.className = 'section-label';
+        section.textContent = i === 0 ? '📍 현재 급식' : (i === 1 ? '📅 이번 주 급식' : '');
+        if (section.textContent) mealContainer.appendChild(section);
+        const card = await buildMealCard(rows[i]);
+        mealContainer.appendChild(card);
+      }
+    }).catch(() => {
+      mealContainer.innerHTML = `<p class="section-label">📍 급식 정보</p><div class="empty-msg"><span class="icon">⚠️</span><p>급식 정보를 불러올 수 없습니다.</p></div>`;
+    });
   }
+
+  /* ── D-Day 계산 함수 ── */
+  function getDDay(targetYmd) {
+    const tYear = parseInt(targetYmd.slice(0, 4));
+    const tMonth = parseInt(targetYmd.slice(4, 6)) - 1;
+    const tDay = parseInt(targetYmd.slice(6, 8));
+    
+    const targetDate = new Date(tYear, tMonth, tDay);
+    const nowDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    const diff = targetDate.getTime() - nowDate.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (days === 0) return "D-Day";
+    if (days > 0) return `D-${days}`;
+    return `D+${Math.abs(days)}`;
+  }
+
+  /* ── 학사일정 데이터 가져오기 ── */
+  function loadSchedule() {
+    const lastDay = new Date(yyyy, today.getMonth() + 1, 0).getDate();
+    const endOfMonth = `${yyyy}${mm}${lastDay}`;
+
+    const url = `https://open.neis.go.kr/hub/SchoolSchedule?Type=json&ATPT_OFCDC_SC_CODE=${ATPT_CODE}&SD_SCHUL_CODE=${SCHUL_CODE}&AA_FROM_YMD=${todayStr}&AA_TO_YMD=${endOfMonth}`;
+
+    fetch(url).then(r => r.json()).then(data => {
+      scheduleContainer.innerHTML = '<p class="section-label">📅 주요 학사일정</p>';
+      
+      if (!data.SchoolSchedule) {
+        scheduleContainer.innerHTML += `<div class="empty-msg"><p>남은 달 동안 예정된 일정이 없습니다.</p></div>`;
+        return;
+      }
+
+      const rows = data.SchoolSchedule[1].row.filter(row => row.EVENT_NM !== "토요휴업일");
+
+      if (rows.length === 0) {
+        scheduleContainer.innerHTML += `<div class="empty-msg"><p>남은 달 동안 예정된 일정이 없습니다.</p></div>`;
+        return;
+      }
+
+      rows.forEach(item => {
+        const date = item.AA_YMD;
+        const isTodayEvent = date === todayStr;
+        const m = date.slice(4,6);
+        const d = date.slice(6,8);
+        const dDay = getDDay(date);
+        
+        const div = document.createElement('div');
+        div.className = `schedule-card ${isTodayEvent ? 'today-event' : ''}`;
+        div.innerHTML = `
+          <div class="schedule-date">
+            <span class="month">${parseInt(m)}월</span>
+            <span class="day">${parseInt(d)}</span>
+          </div>
+          <div class="schedule-info">
+            <div class="schedule-title">${item.EVENT_NM}</div>
+            <div class="schedule-meta">
+                <span class="d-day-badge">${dDay}</span>
+                <span class="schedule-type">${item.SBTR_DD_SC_NM === '해당없음' ? '일반' : item.SBTR_DD_SC_NM}</span>
+            </div>
+          </div>
+        `;
+        scheduleContainer.appendChild(div);
+      });
+    }).catch(() => {
+      scheduleContainer.innerHTML = `<p class="section-label">📅 주요 학사일정</p><div class="empty-msg"><p>일정을 불러오지 못했습니다.</p></div>`;
+    });
+  }
+
+  loadMeals();
+  loadSchedule();
 </script>
 </body>
 </html>
